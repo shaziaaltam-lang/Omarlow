@@ -1,0 +1,4 @@
+* text=auto
+*.blade.php diff=html
+*.json diff=json
+*.lock -diff
