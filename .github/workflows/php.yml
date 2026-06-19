@@ -15,12 +15,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: سحب الكود المصدري
+      uses: actions/checkout@v4
 
-    - name: Validate composer.json and composer.lock
+    - name: إعداد بيئة PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2' # تحديد إصدار PHP لضمان التناسق
+        extensions: mbstring, xml, ctype, iconv, pdo_sqlite, pdo_mysql # إضافة ملحقات PHP الأساسية الشائعة
+        ini-values: post_max_size=256M, upload_max_filesize=256M # قيم INI لتحسين الأداء والتعامل مع الملفات الكبيرة
+        tools: composer:v2 # التأكد من استخدام Composer v2
+
+    - name: التحقق من ملفات Composer
       run: composer validate --strict
 
-    - name: Cache Composer packages
+    - name: تخزين حزم Composer مؤقتاً
       id: composer-cache
       uses: actions/cache@v3
       with:
@@ -29,11 +38,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-php-
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
+    - name: تثبيت الاعتمادات
+      run: composer install --prefer-dist --no-progress --no-interaction
 
-    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
-    # Docs: https://getcomposer.org/doc/articles/scripts.md
-
-    # - name: Run test suite
-    #   run: composer run-script test
+    # يوصى بشدة بإضافة سكريبت اختبار في ملف composer.json، على سبيل المثال: "test": "vendor/bin/phpunit"
+    # وثائق Composer: https://getcomposer.org/doc/articles/scripts.md
+    - name: تشغيل مجموعة الاختبارات
+      run: composer run-script test
