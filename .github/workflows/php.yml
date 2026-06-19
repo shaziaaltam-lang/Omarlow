@@ -1,4 +1,4 @@
-name: PHP Composer
+name: PHP Composer CI
 
 on:
   push:
@@ -12,41 +12,43 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: سحب الكود المصدري
-      uses: actions/checkout@v4
+      - name: سحب الكود المصدري
+        uses: actions/checkout@v4
 
-    - name: إعداد بيئة PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: mbstring, xml, ctype, iconv, pdo_sqlite, pdo_mysql
-        ini-values: post_max_size=256M, upload_max_filesize=256M
-        tools: composer:v2
+      - name: إعداد بيئة PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, pdo_sqlite, pdo_mysql
+          ini-values: post_max_size=256M, upload_max_files=256M
+          tools: composer:v2
 
-    - name: التحقق من صحة ملف composer.json
-      run: composer validate --strict
+      - name: التحقق من صحة ملف composer.json
+        run: composer validate --strict
 
-    - name: الحصول على مسار ذاكرة التخزين المؤقت لـ Composer
-      id: composer-cache
-      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - name: التحقق من وجود ثغرات أمنية في الاعتمادات
+        run: composer audit
 
-    - name: تخزين حزم Composer مؤقتاً
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.composer-cache.outputs.dir }}
-        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-composer-
+      - name: الحصول على مسار ذاكرة التخزين المؤقت لـ Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-    - name: تثبيت الاعتمادات
-      run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+      - name: تخزين حزم Composer مؤقتاً
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
-    - name: تشغيل مجموعة الاختبارات
-      run: |
-        if [ -f vendor/bin/phpunit ]; then
-          ./vendor/bin/phpunit
-        else
-          echo "لا توجد اختبارات معرفة أو PHPUnit غير مثبت"
-        fi
+      - name: تثبيت الاعتمادات
+        run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      - name: تشغيل مجموعة الاختبارات
+        run: |
+          if [ -f vendor/bin/phpunit ]; then
+            ./vendor/bin/phpunit --stop-on-failure --verbose
+          else
+            echo "خطأ: PHPUnit غير مثبت. يرجى التحقق من الاعتمادات." && exit 1
+          fi
