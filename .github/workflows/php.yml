@@ -28,17 +28,25 @@ jobs:
     - name: التحقق من صحة ملف composer.json
       run: composer validate --strict
 
-    - name: تخزين حزم Composer مؤقتاً
+    - name: الحصول على مسار ذاكرة التخزين المؤقت لـ Composer
       id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: تخزين حزم Composer مؤقتاً
       uses: actions/cache@v4
       with:
-        path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
-          ${{ runner.os }}-php-
+          ${{ runner.os }}-composer-
 
     - name: تثبيت الاعتمادات
       run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
     - name: تشغيل مجموعة الاختبارات
-      run: composer run-script test || echo "لا توجد اختبارات معرفة في composer.json"
+      run: |
+        if [ -f vendor/bin/phpunit ]; then
+          ./vendor/bin/phpunit
+        else
+          echo "لا توجد اختبارات معرفة أو PHPUnit غير مثبت"
+        fi
