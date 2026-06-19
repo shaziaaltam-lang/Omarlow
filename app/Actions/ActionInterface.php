@@ -1,0 +1,1 @@
+<?php namespace App\Actions; /** * واجهة برمجية لتوحيد تنفيذ العمليات المنطقية داخل التطبيق. * تضمن هذه الواجهة أن كل فئة عملية تحتوي على دالة تنفيذ موحدة. */ interface ActionInterface { /** * تنفيذ العملية المنطقية المحددة. * * @param array $data مصفوفة البيانات اللازمة لتنفيذ العملية. * @return mixed النتيجة المرجوة من تنفيذ العملية. */ public function execute(array $data); }
