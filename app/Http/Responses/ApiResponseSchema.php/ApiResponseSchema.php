@@ -1,1 +1,48 @@
-<?php namespace App\Http\Responses; class ApiResponseSchema { public bool $success; public string $message; public mixed $data; public ?array $errors; public ?array $meta; public function __construct(bool $success, string $message, mixed $data = null, ?array $errors = null, ?array $meta = null) { $this->success = $success; $this->message = $message; $this->data = $data; $this->errors = $errors; $this->meta = $meta; } public function toArray(): array { return [ 'success' => $this->success, 'message' => $this->message, 'data' => $this->data, 'errors' => $this->errors, 'meta' => $this->meta ]; } public static function success(mixed $data = null, string $message = 'تمت العملية بنجاح', ?array $meta = null): array { return (new self(true, $message, $data, null, $meta))->toArray(); } public static function error(string $message, array $errors = [], int $status = 400): array { return (new self(false, $message, null, $errors))->toArray(); } }
+<?php
+
+namespace App\Http\Responses;
+
+/**
+ * كلاس ApiResponseSchema
+ * يوفر هيكلية موحدة وموحدة لاستجابات واجهة برمجة التطبيقات (API) الخاصة بالنظام.
+ */
+class ApiResponseSchema
+{
+    /**
+     * إنشاء استجابة نجاح قياسية.
+     *
+     * @param mixed $data البيانات المراد إرجاعها.
+     * @param string $message رسالة نصية توضيحية للعملية.
+     * @param int $code كود الحالة الخاص بـ HTTP.
+     * @return array
+     */
+    public static function successResponse(mixed $data = [], string $message = 'تمت العملية بنجاح', int $code = 200): array
+    {
+        return [
+            'success' => true,
+            'data'    => $data,
+            'message' => $message,
+            'errors'  => null,
+            'code'    => $code
+        ];
+    }
+
+    /**
+     * إنشاء استجابة خطأ قياسية.
+     *
+     * @param string $message رسالة الخطأ للمستخدم.
+     * @param array|null $errors قائمة تفصيلية بالأخطاء (مثل أخطاء التحقق).
+     * @param int $code كود الحالة الخاص بـ HTTP.
+     * @return array
+     */
+    public static function errorResponse(string $message = 'حدث خطأ ما', ?array $errors = null, int $code = 400): array
+    {
+        return [
+            'success' => false,
+            'data'    => [],
+            'message' => $message,
+            'errors'  => $errors,
+            'code'    => $code
+        ];
+    }
+}
